@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Doctor Appointments</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    .table-container {
+      max-height: 45vh;
+      overflow-y: auto;
+      padding-bottom: 5px;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #212529;
+      color: white;
+      z-index: 5;
+    }
+  </style>
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+  <h2 class="text-primary mb-3">My Appointments</h2>
+  <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary mb-3">← Back to Dashboard</a>
+
+  <!-- Search Bar -->
+  <input id="searchBox" class="form-control mb-4" type="text" placeholder="Search patient or date (YYYY-MM-DD)...">
+
+  <!--   UPCOMING APPOINTMENTS   -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <h4 class="card-title mb-3 text-success">Upcoming Appointments</h4>
+
+      <div class="table-container">
+        <table class="table table-bordered table-striped align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Patient</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody id="upcomingTable">
+            {% for a in appointments %}
+              {% if a.status == 'Booked' and a.date >= current_date %}
+              <tr>
+                <td>{{ a.id }}</td>
+                <td>{{ a.patient.name }}</td>
+                <td>{{ a.date }}</td>
+                <td>{{ a.time.strftime('%H:%M') }}</td>
+
+                <td class="status-cell"
+                    data-date="{{ a.date }}"
+                    data-time="{{ a.time.startswith('%H:%M') if false else a.time.strftime('%H:%M') }}"
+                    data-status="{{ a.status }}">
+                  <span class="badge bg-info text-dark">Booked</span>
+                </td>
+
+                <td class="action-cell">
+                  <a href="{{ url_for('complete_appointment', appointment_id=a.id) }}" 
+                     class="btn btn-sm btn-success">✔ Complete</a>
+
+                  <a href="{{ url_for('doctor_cancel_appointment', appointment_id=a.id) }}" 
+                     class="btn btn-sm btn-danger"
+                     onclick="return confirm('Cancel this appointment?');">✖ Cancel</a>
+                </td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!--   PAST APPOINTMENTS   -->
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h4 class="card-title mb-3 text-secondary">Past Appointments</h4>
+
+      <div class="table-container">
+        <table class="table table-bordered table-striped align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>ID</th>
+              <th>Patient</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="pastTable">
+            {% for a in appointments %}
+              {% if a.status != 'Booked' or a.date < current_date %}
+              <tr>
+                <td>{{ a.id }}</td>
+                <td>{{ a.patient.name }}</td>
+                <td>{{ a.date }}</td>
+                <td>{{ a.time.strftime('%H:%M') }}</td>
+
+                <td class="status-cell"
+                    data-date="{{ a.date }}"
+                    data-time="{{ a.time.strftime('%H:%M') }}"
+                    data-status="{{ a.status }}">
+
+                  {% if a.status == 'Completed' %}
+                    <span class="badge bg-success">Completed</span>
+
+                  {% elif a.status == 'Cancelled' %}
+                    <span class="badge bg-danger">Cancelled</span>
+
+                  {% else %}
+                    <span class="badge bg-secondary">Past</span>
+                  {% endif %}
+                </td>
+
+              </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Search Filter -->
+<script>
+  const searchBox = document.getElementById("searchBox");
+
+  searchBox.addEventListener("input", () => {
+    const q = searchBox.value.toLowerCase();
+
+    document.querySelectorAll("#upcomingTable tr").forEach(row => {
+      const patient = row.cells[1].textContent.toLowerCase();
+      const date = row.cells[2].textContent.toLowerCase();
+      row.style.display = patient.includes(q) || date.includes(q) ? "" : "none";
+    });
+
+    document.querySelectorAll("#pastTable tr").forEach(row => {
+      const patient = row.cells[1].textContent.toLowerCase();
+      const date = row.cells[2].textContent.toLowerCase();
+      row.style.display = patient.includes(q) || date.includes(q) ? "" : "none";
+    });
+  });
+</script>
+
+<!-- Missed Appointment Detection + Disable Doctor Actions -->
+<script>
+  document.querySelectorAll(".status-cell").forEach(cell => {
+      const dateStr = cell.dataset.date;
+      const timeStr = cell.dataset.time;
+      const status = cell.dataset.status;
+
+      if (status !== "Booked") return;
+
+      const apptDateTime = new Date(dateStr + "T" + timeStr + ":00");
+      const now = new Date();
+
+      if (apptDateTime < now) {
+          // Change status display
+          cell.innerHTML = `<span class="badge bg-warning text-dark">Missed</span>`;
+
+          // Remove action buttons for missed appointments
+          const actionCell = cell.parentElement.querySelector(".action-cell");
+          if (actionCell) {
+              actionCell.innerHTML = `<span class="text-muted">-</span>`;
+          }
+      }
+  });
+</script>
+
+</body>
+</html>

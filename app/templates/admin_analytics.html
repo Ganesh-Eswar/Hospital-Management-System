@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Analytics</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+  <h2 class="mb-4">Admin Analytics Dashboard</h2>
+
+  <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary mb-3">Back to Dashboard</a>
+
+  <!-- Filters -->
+  <div class="card shadow-sm p-3 mb-4">
+    <h4>Filter Analytics</h4>
+
+    <div class="row">
+      <div class="col-md-4">
+        <label class="form-label">Filter by Doctor</label>
+        <select id="doctorFilter" class="form-select">
+          <option value="0">All Doctors</option>
+          {% for d in doctors %}
+          <option value="{{ d.id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Filter by Patient</label>
+        <select id="patientFilter" class="form-select">
+          <option value="0">All Patients</option>
+          {% for p in patients %}
+          <option value="{{ p.id }}">{{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card shadow-sm p-3">
+    <h4 class="mb-3">Appointment Status Overview</h4>
+    <canvas id="analyticsChart" height="130"></canvas>
+  </div>
+
+</div>
+
+<script>
+let chartRef = null;
+
+async function loadAnalytics() {
+    const doctorId = document.getElementById("doctorFilter").value;
+    const patientId = document.getElementById("patientFilter").value;
+
+    const res = await fetch(
+        `/admin/analytics_data?doctor_id=${doctorId}&patient_id=${patientId}`
+    );
+
+    const data = await res.json();
+
+    if (chartRef) chartRef.destroy();
+
+    const ctx = document.getElementById("analyticsChart");
+
+    chartRef = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Count',
+                data: data.counts,
+                backgroundColor: ['#36A2EB', '#4BC0C0', '#FF6384', '#FFCE56']
+            }]
+        }
+    });
+}
+
+document.getElementById("doctorFilter").addEventListener("change", loadAnalytics);
+document.getElementById("patientFilter").addEventListener("change", loadAnalytics);
+
+// Load first time
+loadAnalytics();
+</script>
+
+</body>
+</html>

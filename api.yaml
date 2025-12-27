@@ -1,0 +1,491 @@
+openapi: 3.0.3
+info:
+  title: Hospital Management System API
+  description: API documentation for the HMS Flask Application
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+
+paths:
+
+  ##########################################################
+  # AUTHENTICATION
+  ##########################################################
+
+  /login:
+    post:
+      summary: Login a user (admin/doctor/patient)
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: Login successful
+        "401":
+          description: Invalid credentials
+
+  /logout:
+    get:
+      summary: Logout current user
+      responses:
+        "200": { description: Logged out }
+
+  /register:
+    post:
+      summary: Register new patient account
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                phone: { type: string }
+                password: { type: string }
+      responses:
+        "200": { description: Registered successfully }
+        "400": { description: Email already exists }
+
+  ##########################################################
+  # ADMIN ROUTES
+  ##########################################################
+
+  /admin/dashboard:
+    get:
+      summary: Admin dashboard overview
+      responses:
+        "200": { description: Dashboard data returned }
+
+  /admin/search:
+    get:
+      summary: Search doctors/patients by name
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchResult'
+
+  /admin/search_appointments:
+    get:
+      summary: Search appointments by doctor or patient name
+      parameters:
+        - in: query
+          name: q
+          schema: { type: string }
+      responses:
+        "200":
+          description: Filtered appointment list
+
+  /admin/stats_data:
+    get:
+      summary: Admin appointment statistics
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusStats'
+
+  /admin/doctors:
+    get:
+      summary: Get all doctors
+      responses:
+        "200": { description: List of doctors }
+    post:
+      summary: Add new doctor
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddDoctor'
+      responses:
+        "200": { description: Doctor added }
+
+  /admin/doctor/edit/{doctor_id}:
+    post:
+      summary: Edit doctor details
+      parameters:
+        - in: path
+          name: doctor_id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EditDoctor'
+      responses:
+        "200": { description: Doctor updated }
+
+  /admin/doctor/delete/{doctor_id}:
+    post:
+      summary: Deactivate doctor
+      parameters:
+        - name: doctor_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: Doctor deactivated }
+
+  /admin/users:
+    get:
+      summary: List all users
+      responses:
+        "200": { description: All users listed }
+
+  /admin/user/edit/{user_id}:
+    post:
+      summary: Edit user (admin)
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EditUser'
+      responses:
+        "200": { description: User updated }
+
+  /admin/user/delete/{user_id}:
+    post:
+      summary: Delete user
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        "200": { description: User deleted }
+
+  /admin/user/toggle/{user_id}:
+    post:
+      summary: Toggle user active/inactive
+      parameters:
+        - name: user_id
+          required: true
+          in: path
+          schema: { type: integer }
+      responses:
+        "200": { description: Status changed }
+
+  /admin/analytics:
+    get:
+      summary: View analytics dashboard
+      responses:
+        "200": { description: Analytics page }
+
+  /admin/analytics_data:
+    get:
+      summary: Filter appointment analytics
+      parameters:
+        - name: doctor_id
+          in: query
+          schema: { type: string }
+        - name: patient_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatusStats"
+
+  ##########################################################
+  # PATIENT ROUTES
+  ##########################################################
+
+  /patient/dashboard:
+    get:
+      summary: Patient dashboard
+      responses:
+        "200": { description: Dashboard shown }
+
+  /patient/appointments:
+    get:
+      summary: List patient appointments
+      responses:
+        "200": { description: Appointment page }
+    post:
+      summary: Book appointment
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookAppointment'
+      responses:
+        "200": { description: Appointment booked }
+
+  /patient/cancel_appointment/{appointment_id}:
+    get:
+      summary: Cancel appointment
+      parameters:
+        - name: appointment_id
+          in: path
+          schema: { type: integer }
+      responses:
+        "200": { description: Cancelled }
+
+  /patient/doctors:
+    get:
+      summary: View doctor list + availability
+      responses:
+        "200": { description: Doctors returned }
+
+  /patient/departments:
+    get:
+      summary: View all departments with doctors
+      responses:
+        "200": { description: Department list }
+
+  /patient/treatments:
+    get:
+      summary: List patient treatment history
+      responses:
+        "200": { description: Treatment list }
+
+  /patient/treatment/{treatment_id}:
+    get:
+      summary: View detailed treatment report
+      parameters:
+        - name: treatment_id
+          in: path
+          schema: { type: integer }
+      responses:
+        "200": { description: Report shown }
+
+  /patient/profile:
+    get:
+      summary: View profile
+      responses:
+        "200": { description: Profile page }
+    post:
+      summary: Update profile
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/EditProfile"
+      responses:
+        "200": { description: Profile updated }
+
+  ##########################################################
+  # DOCTOR ROUTES
+  ##########################################################
+
+  /doctor/dashboard:
+    get:
+      summary: Doctor dashboard
+      responses:
+        "200": { description: Dashboard }
+
+  /doctor/appointments:
+    get:
+      summary: List doctor's appointments
+      responses:
+        "200": { description: Appointments }
+
+  /doctor/patients:
+    get:
+      summary: List patients treated by doctor
+      responses:
+        "200": { description: Patient list }
+
+  /doctor/patient/{patient_id}/history:
+    get:
+      summary: View medical history of patient
+      parameters:
+        - name: patient_id
+          in: path
+          schema: { type: integer }
+      responses:
+        "200": { description: History }
+
+  /doctor/complete/{appointment_id}:
+    post:
+      summary: Mark appointment as completed with diagnosis/prescription
+      parameters:
+        - name: appointment_id
+          in: path
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TreatmentInput'
+      responses:
+        "200": { description: Completed }
+
+  /doctor/cancel/{appointment_id}:
+    get:
+      summary: Cancel appointment
+      parameters:
+        - name: appointment_id
+          in: path
+          schema: { type: integer }
+      responses:
+        "200": { description: Cancelled }
+
+  /doctor/availability:
+    get:
+      summary: View availability slots
+      responses:
+        "200": { description: Slots }
+    post:
+      summary: Add availability slot
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AddAvailability'
+      responses:
+        "200": { description: Slot added }
+
+  /doctor/availability/delete/{slot_id}:
+    post:
+      summary: Delete availability slot
+      parameters:
+        - name: slot_id
+          in: path
+          schema: { type: integer }
+      responses:
+        "200": { description: Deleted }
+
+##########################################################
+# SCHEMAS
+##########################################################
+
+components:
+  schemas:
+
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        role: { type: string }
+
+    Appointment:
+      type: object
+      properties:
+        id: { type: integer }
+        doctor_id: { type: integer }
+        patient_id: { type: integer }
+        date: { type: string, format: date }
+        time: { type: string, format: time }
+        status: { type: string }
+
+    Treatment:
+      type: object
+      properties:
+        id: { type: integer }
+        appointment_id: { type: integer }
+        diagnosis: { type: string }
+        prescription: { type: string }
+        notes: { type: string }
+
+    DoctorAvailability:
+      type: object
+      properties:
+        doctor_id: { type: integer }
+        date: { type: string }
+        start_time: { type: string }
+        end_time: { type: string }
+
+    Department:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        description: { type: string }
+
+    StatusStats:
+      type: object
+      properties:
+        labels:
+          type: array
+          items: { type: string }
+        counts:
+          type: array
+          items: { type: integer }
+
+    SearchResult:
+      type: object
+      properties:
+        type: { type: string }
+        name: { type: string }
+        email: { type: string }
+
+    AddDoctor:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        password: { type: string }
+        department_id: { type: integer }
+
+    EditDoctor:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        phone: { type: string }
+        department_id: { type: integer }
+        password: { type: string }
+
+    EditUser:
+      type: object
+      properties:
+        name: { type: string }
+        phone: { type: string }
+        role: { type: string }
+
+    BookAppointment:
+      type: object
+      properties:
+        doctor_id: { type: integer }
+        date: { type: string }
+        time: { type: string }
+
+    TreatmentInput:
+      type: object
+      properties:
+        diagnosis: { type: string }
+        prescription: { type: string }
+        notes: { type: string }
+
+    AddAvailability:
+      type: object
+      properties:
+        date: { type: string }
+        start_time: { type: string }
+        end_time: { type: string }
+
+    EditProfile:
+      type: object
+      properties:
+        name: { type: string }
+        phone: { type: string }
+        password: { type: string }

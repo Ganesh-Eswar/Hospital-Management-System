@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Treatment Report</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-4">
+
+  <a href="{{ url_for('patient_treatments') }}" class="btn btn-secondary mb-3">
+    ← Back to Medical History
+  </a>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      <h3 class="text-primary mb-3">Treatment Report</h3>
+
+      <p><strong>Doctor:</strong> {{ treatment.appointment.doctor.name }}</p>
+      <p><strong>Date:</strong> {{ treatment.appointment.date }}</p>
+
+      <hr>
+
+      <h5>Diagnosis</h5>
+      <p>{{ treatment.diagnosis }}</p>
+
+      <h5>Prescription</h5>
+      <p>{{ treatment.prescription }}</p>
+
+      <h5>Notes</h5>
+      <p>{{ treatment.notes or '-' }}</p>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

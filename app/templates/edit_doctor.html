@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Doctor</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container mt-4">
+  <h2 class="text-primary mb-3">Edit Doctor</h2>
+  <a href="{{ url_for('manage_doctors') }}" class="btn btn-secondary mb-4">← Back to Manage Doctors</a>
+
+  <div class="card p-4 shadow-sm">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <input type="text" name="name" value="{{ doctor.name }}" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" name="email" value="{{ doctor.email }}" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Phone</label>
+        <input type="text" name="phone" value="{{ doctor.phone }}" class="form-control" required>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Department</label>
+        <select name="department_id" class="form-select" required>
+            <option value="">-- Select Department --</option>
+            {% for dept in departments %}
+                <option value="{{ dept.id }}" {% if doctor.department_id == dept.id %}selected{% endif %}>
+                    {{ dept.name }}
+                </option>
+            {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">New Password (optional)</label>
+        <input type="password" name="password" placeholder="Leave blank to keep current" class="form-control">
+      </div>
+
+      <button type="submit" class="btn btn-success">Update Doctor</button>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
