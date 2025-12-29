@@ -103,3 +103,19 @@ All tables are created automatically when the application runs.
 ## Project Demonstration Link:
 - https://drive.google.com/file/d/1VsucoOrq686KzvmzB4YqMiHILneSHBy_/view
 
+---
+
+## How to run:
+
+1. create and activate virtualenv:
+   python3 -m venv venv
+   source venv/bin/activate   # on Windows use: venv\Scripts\activate
+
+2. install:
+   pip install -r requirements.txt
+
+3. run:
+   python run.py
+
+Visit http://127.0.0.1:5000 in your browser.
+Seeded admin credentials: admin@hospital.local / Admin@123
